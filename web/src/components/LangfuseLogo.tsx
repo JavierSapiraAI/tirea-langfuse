@@ -5,6 +5,12 @@ import { env } from "@/src/env.mjs";
 import { useUiCustomization } from "@/src/ee/features/ui-customization/useUiCustomization";
 import { PlusIcon } from "lucide-react";
 
+/**
+ * =====================================================
+ * TIREA BRANDING CUSTOMIZATION
+ * Using Tirea logo instead of Langfuse icon
+ * =====================================================
+ */
 export const LangfuseIcon = ({
   size = 32,
   className,
@@ -14,10 +20,10 @@ export const LangfuseIcon = ({
 }) => (
   // eslint-disable-next-line @next/next/no-img-element
   <img
-    src={`${env.NEXT_PUBLIC_BASE_PATH ?? ""}/icon.svg`}
+    src={`${env.NEXT_PUBLIC_BASE_PATH ?? ""}/tirea-logo.png`}
     width={size}
     height={size}
-    alt="Langfuse Icon"
+    alt="Tirea Icon"
     className={className}
   />
 );
@@ -56,16 +62,17 @@ const LangfuseLogotypeOrCustomized = ({ size }: { size: "sm" | "xl" }) => {
     );
   }
 
+  // TIREA: Show Tirea branding instead of Langfuse
   return (
     <div className="flex items-center">
       <LangfuseIcon size={size === "sm" ? 16 : 20} />
       <span
         className={cn(
-          "ml-2 font-mono font-semibold leading-none group-data-[collapsible=icon]:hidden",
+          "ml-2 font-mono font-semibold leading-none group-data-[collapsible=icon]:hidden text-tirea-primary-500",
           size === "sm" ? "text-sm" : "text-xl",
         )}
       >
-        Langfuse
+        Tirea
       </span>
     </div>
   );
