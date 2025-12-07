@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * =====================================================
+ * TIREA BRANDING CUSTOMIZATION
+ * Colores corporativos: Blue #0066CC, Cyan #00A3E0
+ * =====================================================
+ */
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -39,8 +46,15 @@
 
     --ring: 215 20.2% 65.1%;
 
-    --primary-accent: 243 75.4% 58.6%;
-    --hover-primary-accent: 239 83.5% 66.7%;
+    /* TIREA: Primary accent blue #0066CC */
+    --primary-accent: 210 100% 40%;
+    --hover-primary-accent: 210 100% 50%;
+
+    /* TIREA: Brand colors for custom components */
+    --tirea-primary: 210 100% 40%;
+    --tirea-primary-light: 210 100% 55%;
+    --tirea-accent: 195 100% 44%;
+    --tirea-accent-light: 195 100% 60%;
 
     --muted-green: 84 81% 44%;
     --muted-magenta: 330 90% 70%;
@@ -129,8 +143,15 @@
 
     --ring: 217.2 32.6% 17.5%;
 
-    --primary-accent: 246 55% 70%;
-    --muted-primary-accent: 239 83.5% 66.7%;
+    /* TIREA: Primary accent blue (dark mode) */
+    --primary-accent: 210 100% 55%;
+    --muted-primary-accent: 210 100% 65%;
+
+    /* TIREA: Brand colors (dark mode) */
+    --tirea-primary: 210 100% 55%;
+    --tirea-primary-light: 210 100% 65%;
+    --tirea-accent: 195 100% 55%;
+    --tirea-accent-light: 195 100% 65%;
 
     --muted-blue: 215 95% 73.1%;
     --muted-green: 142 76.7% 73.1%;

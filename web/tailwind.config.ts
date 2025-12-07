@@ -1,5 +1,41 @@
 const colors = require("tailwindcss/colors");
 
+/**
+ * =====================================================
+ * TIREA BRANDING CUSTOMIZATION
+ * Primary: #0066CC (Blue)
+ * Accent: #00A3E0 (Cyan)
+ * =====================================================
+ */
+
+// Tirea Brand Color Palette
+const tireaColors = {
+  primary: {
+    50: '#e6f2ff',
+    100: '#b3d9ff',
+    200: '#80bfff',
+    300: '#4da6ff',
+    400: '#1a8cff',
+    500: '#0066CC',
+    600: '#0052a3',
+    700: '#003d7a',
+    800: '#002952',
+    900: '#001429',
+  },
+  accent: {
+    50: '#e6f7fb',
+    100: '#b3e7f2',
+    200: '#80d6e9',
+    300: '#4dc6e0',
+    400: '#1ab5d7',
+    500: '#00A3E0',
+    600: '#0082b3',
+    700: '#006286',
+    800: '#00415a',
+    900: '#00212d',
+  },
+};
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -54,13 +90,17 @@ module.exports = {
         "accent-light-blue": "hsl(var(--accent-light-blue))",
         "accent-dark-blue": "hsl(var(--accent-dark-blue))",
 
+        // TIREA: Custom brand colors
+        tirea: tireaColors,
+
         tremor: {
           brand: {
-            faint: colors.blue[50],
-            muted: colors.blue[200],
-            subtle: colors.blue[400],
-            DEFAULT: colors.blue[500],
-            emphasis: colors.blue[700],
+            // TIREA: Use Tirea blue instead of default blue
+            faint: tireaColors.primary[50],
+            muted: tireaColors.primary[200],
+            subtle: tireaColors.primary[400],
+            DEFAULT: tireaColors.primary[500],
+            emphasis: tireaColors.primary[700],
             inverted: colors.white,
           },
           background: {
