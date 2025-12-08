@@ -75,7 +75,11 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/src/components/ui/tooltip";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, Wrench, GitCompare, Webhook } from "lucide-react";
+// TIREA: Custom Judge Components
+import { AgentToolsSelector } from "@/src/features/evals/components/agent-tools-selector";
+import { MultiInputConfigurator } from "@/src/features/evals/components/multi-input-configurator";
+import { WebhookConfigPanel } from "@/src/features/evals/components/webhook-config-panel";
 
 // Lazy load TracesTable
 const TracesTable = lazy(
@@ -206,6 +210,24 @@ export const InnerEvaluatorForm = (props: {
         (option): option is "NEW" | "EXISTING" =>
           ["NEW", "EXISTING"].includes(option),
       ),
+      // TIREA: Custom Judge Fields
+      judgeType: (props.existingEvaluator as any)?.agentConfig
+        ? "agentic"
+        : (props.existingEvaluator as any)?.multiInputMode
+          ? "multi-input"
+          : "standard",
+      agentConfig: (props.existingEvaluator as any)?.agentConfig ?? {
+        tools: [],
+        strategy: "sequential",
+        maxIterations: 5,
+      },
+      multiInputMode: (props.existingEvaluator as any)?.multiInputMode ?? undefined,
+      inputMappings: (props.existingEvaluator as any)?.inputMappings ?? [],
+      webhookConfig: (props.existingEvaluator as any)?.webhookConfig ?? {
+        enabled: false,
+        url: "",
+        events: ["completed"],
+      },
     },
   }) as UseFormReturn<EvalFormType>;
 
@@ -393,6 +415,12 @@ export const InnerEvaluatorForm = (props: {
     const filter = validatedFilter.data;
     const scoreName = values.scoreName;
 
+    // TIREA: Prepare custom judge config based on judge type
+    const agentConfig = values.judgeType === "agentic" ? values.agentConfig : undefined;
+    const multiInputMode = values.judgeType === "multi-input" ? values.multiInputMode : undefined;
+    const inputMappings = values.judgeType === "multi-input" ? values.inputMappings : undefined;
+    const webhookConfig = values.webhookConfig?.enabled ? values.webhookConfig : undefined;
+
     (props.mode === "edit" && props.existingEvaluator?.id
       ? updateJobMutation.mutateAsync({
           projectId: props.projectId,
@@ -404,6 +432,11 @@ export const InnerEvaluatorForm = (props: {
             sampling,
             scoreName,
             timeScope: values.timeScope,
+            // TIREA: Custom Judge Fields
+            agentConfig,
+            multiInputMode,
+            inputMappings,
+            webhookConfig,
           },
         })
       : createJobMutation.mutateAsync({
@@ -416,6 +449,11 @@ export const InnerEvaluatorForm = (props: {
           sampling,
           delay,
           timeScope: values.timeScope,
+          // TIREA: Custom Judge Fields
+          agentConfig,
+          multiInputMode,
+          inputMappings,
+          webhookConfig,
         })
     )
       .then(() => {
@@ -1137,6 +1175,82 @@ export const InnerEvaluatorForm = (props: {
               </>
             )}
           />
+        </div>
+      </Card>
+
+      {/* TIREA: Custom Judge Configuration Section */}
+      <Card className="min-w-0 max-w-full p-4">
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-lg font-medium">Advanced Judge Configuration</span>
+          <span className="rounded-full bg-tirea-primary-100 px-2 py-0.5 text-xs font-medium text-tirea-primary-700 dark:bg-tirea-primary-900 dark:text-tirea-primary-300">
+            Tirea Custom
+          </span>
+        </div>
+        <div className="flex flex-col gap-4">
+          {/* Judge Type Selector */}
+          <FormField
+            control={form.control}
+            name="judgeType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Judge Type</FormLabel>
+                <FormControl>
+                  <Tabs
+                    value={field.value || "standard"}
+                    onValueChange={field.onChange}
+                    className="w-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger
+                        value="standard"
+                        className="flex items-center gap-1"
+                        disabled={props.disabled}
+                      >
+                        Standard
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="agentic"
+                        className="flex items-center gap-1"
+                        disabled={props.disabled}
+                      >
+                        <Wrench className="h-3 w-3" />
+                        Agentic
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="multi-input"
+                        className="flex items-center gap-1"
+                        disabled={props.disabled}
+                      >
+                        <GitCompare className="h-3 w-3" />
+                        Multi-Input
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </FormControl>
+                <FormDescription>
+                  {field.value === "standard" &&
+                    "Standard LLM judge with no tool access"}
+                  {field.value === "agentic" &&
+                    "Judge can use tools to gather information during evaluation"}
+                  {field.value === "multi-input" &&
+                    "Compare multiple outputs or models side by side"}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Conditional Judge Configuration Components */}
+          {form.watch("judgeType") === "agentic" && (
+            <AgentToolsSelector form={form} disabled={props.disabled} />
+          )}
+
+          {form.watch("judgeType") === "multi-input" && (
+            <MultiInputConfigurator form={form} disabled={props.disabled} />
+          )}
+
+          {/* Webhook Configuration - Always visible */}
+          <WebhookConfigPanel form={form} disabled={props.disabled} />
         </div>
       </Card>
     </div>

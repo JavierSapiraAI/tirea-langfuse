@@ -62,6 +62,11 @@ const ConfigWithTemplateSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   timeScope: TimeScopeSchema,
+  // TIREA: Custom Judge Fields
+  agentConfig: jsonSchema.nullable().optional(),
+  multiInputMode: z.string().nullable().optional(),
+  inputMappings: jsonSchema.nullable().optional(),
+  webhookConfig: jsonSchema.nullable().optional(),
   evalTemplate: z
     .object({
       name: z.string(),
@@ -123,6 +128,24 @@ export const CreateEvalTemplate = z.object({
     .default(EvalReferencedEvaluators.PERSIST),
 });
 
+// TIREA: Custom Judge Configuration Schemas
+const AgentConfigSchema = z.object({
+  tools: z.array(z.string()),
+  strategy: z.enum(["sequential", "parallel"]).default("sequential"),
+  maxIterations: z.number().min(1).max(20).default(5),
+}).optional();
+
+const MultiInputMappingSchema = z.object({
+  name: z.string().min(1),
+  mapping: variableMapping,
+}).optional();
+
+const WebhookConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  url: z.string().url().optional(),
+  events: z.array(z.enum(["completed", "error", "started"])).default(["completed"]),
+}).optional();
+
 const CreateEvalJobSchema = z.object({
   projectId: z.string(),
   evalTemplateId: z.string(),
@@ -133,6 +156,11 @@ const CreateEvalJobSchema = z.object({
   sampling: z.number().gt(0).lte(1),
   delay: z.number().gte(0).default(DEFAULT_TRACE_JOB_DELAY), // 10 seconds default
   timeScope: TimeScopeSchema,
+  // TIREA: Custom Judge Fields
+  agentConfig: AgentConfigSchema,
+  multiInputMode: z.enum(["comparison", "ensemble"]).optional(),
+  inputMappings: z.array(MultiInputMappingSchema).optional(),
+  webhookConfig: WebhookConfigSchema,
 });
 
 const UpdateEvalJobSchema = z.object({
@@ -143,6 +171,11 @@ const UpdateEvalJobSchema = z.object({
   delay: z.number().gte(0).optional(),
   status: z.enum(EvaluatorStatus).optional(),
   timeScope: TimeScopeSchema.optional(),
+  // TIREA: Custom Judge Fields
+  agentConfig: AgentConfigSchema,
+  multiInputMode: z.enum(["comparison", "ensemble"]).optional().nullable(),
+  inputMappings: z.array(MultiInputMappingSchema).optional().nullable(),
+  webhookConfig: WebhookConfigSchema,
 });
 
 const fetchJobExecutionsByStatus = async ({
@@ -720,6 +753,11 @@ export const evalRouter = createTRPCRouter({
           delay: input.delay,
           status: "ACTIVE",
           timeScope: input.timeScope,
+          // TIREA: Custom Judge Fields
+          agentConfig: input.agentConfig ?? undefined,
+          multiInputMode: input.multiInputMode ?? undefined,
+          inputMappings: input.inputMappings ?? undefined,
+          webhookConfig: input.webhookConfig ?? undefined,
         },
       });
 

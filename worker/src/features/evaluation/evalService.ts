@@ -620,6 +620,59 @@ export const createEvalJobs = async ({
   }
 };
 
+// TIREA: Custom Judge Type Detection
+type TireaJudgeType = "standard" | "agentic" | "multi-input";
+
+interface TireaAgentConfig {
+  tools: string[];
+  strategy: "sequential" | "parallel";
+  maxIterations: number;
+}
+
+interface TireaWebhookConfig {
+  enabled: boolean;
+  url: string;
+  events: string[];
+}
+
+const detectTireaJudgeType = (config: {
+  agentConfig?: TireaAgentConfig | null;
+  multiInputMode?: string | null;
+}): TireaJudgeType => {
+  if (config.agentConfig && config.agentConfig.tools?.length > 0) {
+    return "agentic";
+  }
+  if (config.multiInputMode) {
+    return "multi-input";
+  }
+  return "standard";
+};
+
+// TIREA: Send webhook notification
+const sendTireaWebhook = async (
+  webhookConfig: TireaWebhookConfig,
+  eventType: string,
+  payload: Record<string, unknown>,
+) => {
+  if (!webhookConfig.enabled || !webhookConfig.url) return;
+  if (!webhookConfig.events.includes(eventType)) return;
+
+  try {
+    const response = await fetch(webhookConfig.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: `evaluation.${eventType}`,
+        timestamp: new Date().toISOString(),
+        data: payload,
+      }),
+    });
+    logger.debug(`TIREA webhook sent: ${eventType} -> ${response.status}`);
+  } catch (error) {
+    logger.warn(`TIREA webhook failed: ${error}`);
+  }
+};
+
 // for a single eval job, this function is used to evaluate the job
 export const evaluate = async ({
   event,
@@ -671,6 +724,29 @@ export const evaluate = async ({
     throw new UnrecoverableError(
       `Evaluation template not found for config: ${config?.evalTemplateId}`,
     );
+  }
+
+  // TIREA: Detect custom judge type
+  const tireaJudgeType = detectTireaJudgeType({
+    agentConfig: config.agentConfig as TireaAgentConfig | null,
+    multiInputMode: config.multiInputMode as string | null,
+  });
+  const tireaWebhookConfig = config.webhookConfig as TireaWebhookConfig | null;
+
+  if (tireaJudgeType !== "standard") {
+    logger.info(
+      `TIREA: Custom judge type detected: ${tireaJudgeType} for job ${event.jobExecutionId}`,
+    );
+  }
+
+  // TIREA: Send webhook notification for evaluation started
+  if (tireaWebhookConfig?.enabled) {
+    await sendTireaWebhook(tireaWebhookConfig, "started", {
+      jobExecutionId: event.jobExecutionId,
+      projectId: event.projectId,
+      traceId: job.jobInputTraceId,
+      judgeType: tireaJudgeType,
+    });
   }
 
   const template = await prisma.evalTemplate.findFirstOrThrow({
@@ -896,6 +972,20 @@ export const evaluate = async ({
       executionTraceId,
     },
   });
+
+  // TIREA: Send webhook notification for evaluation completed
+  if (tireaWebhookConfig?.enabled) {
+    await sendTireaWebhook(tireaWebhookConfig, "completed", {
+      jobExecutionId: event.jobExecutionId,
+      projectId: event.projectId,
+      traceId: job.jobInputTraceId,
+      evaluatorId: config.id,
+      scoreName: config.scoreName,
+      score: parsedLLMOutput.data.score,
+      reasoning: parsedLLMOutput.data.reasoning,
+      judgeType: tireaJudgeType,
+    });
+  }
 
   logger.debug(
     `Eval job ${job.id} for project ${event.projectId} completed with score ${parsedLLMOutput.data.score}`,

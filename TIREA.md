@@ -195,12 +195,92 @@ const langfuse = new Langfuse({
 });
 ```
 
+## Deploy a EKS (Producción)
+
+### Ambiente Actual
+
+| Componente | Valor |
+|------------|-------|
+| Cluster | `langfuse-backoffice-dev` |
+| Region | `eu-west-2` |
+| Namespace | `langfuse` |
+| ALB | `k8s-langfuse-langfuse-7d7be38ca9-*.eu-west-2.elb.amazonaws.com` |
+
+### Configuración de Imágenes en EKS
+
+```bash
+# 1. Crear secret para ghcr.io
+GITHUB_TOKEN=$(gh auth token) && kubectl create secret docker-registry ghcr-tirea-secret \
+  --namespace=langfuse \
+  --docker-server=ghcr.io \
+  --docker-username=JavierSapiraAI \
+  --docker-password="$GITHUB_TOKEN" \
+  --docker-email=admin@tirea.com
+
+# 2. Actualizar deployments con imágenes Tirea
+kubectl set image deployment/langfuse-web \
+  langfuse=ghcr.io/javiersapiraai/tirea-langfuse-web:tirea-custom \
+  -n langfuse
+
+kubectl set image deployment/langfuse-worker \
+  langfuse=ghcr.io/javiersapiraai/tirea-langfuse-worker:tirea-custom \
+  -n langfuse
+
+# 3. Añadir imagePullSecrets
+kubectl patch deployment langfuse-web -n langfuse \
+  --type='json' -p='[{"op": "add", "path": "/spec/template/spec/imagePullSecrets", "value": [{"name": "ghcr-tirea-secret"}]}]'
+
+kubectl patch deployment langfuse-worker -n langfuse \
+  --type='json' -p='[{"op": "add", "path": "/spec/template/spec/imagePullSecrets", "value": [{"name": "ghcr-tirea-secret"}]}]'
+
+# 4. Verificar rollout
+kubectl rollout status deployment/langfuse-web -n langfuse
+kubectl rollout status deployment/langfuse-worker -n langfuse
+```
+
+### Helm Values (Alternativo)
+
+Para nuevos deployments usar el archivo `langfuse-values.yaml`:
+
+```yaml
+langfuse:
+  image:
+    pullSecrets:
+      - name: ghcr-tirea-secret
+  web:
+    image:
+      repository: ghcr.io/javiersapiraai/tirea-langfuse-web
+      tag: tirea-custom
+  worker:
+    image:
+      repository: ghcr.io/javiersapiraai/tirea-langfuse-worker
+      tag: tirea-custom
+```
+
+### Monitoreo
+
+```bash
+# Ver pods
+kubectl get pods -n langfuse
+
+# Ver logs web
+kubectl logs -n langfuse -l app.kubernetes.io/component=web -f
+
+# Ver logs worker
+kubectl logs -n langfuse -l app.kubernetes.io/component=worker -f
+
+# Health check
+curl -s "<ALB-URL>/api/public/health"
+```
+
 ## Soporte
 
 - **Repositorio**: https://github.com/JavierSapiraAI/tirea-langfuse
 - **Branch**: `tirea-custom`
 - **Linear**: SAI-643
+- **Runbook**: `tirea-doc-hub-backoffice/docs/operations/TIREA_LANGFUSE_RUNBOOK.md`
 
 ---
 
 *Fork mantenido por el equipo de Tirea AI*
+*Última actualización: Diciembre 2025*

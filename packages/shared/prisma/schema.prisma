@@ -991,6 +991,17 @@ model JobConfiguration {
   timeScope       String[]       @default(["NEW"]) @map("time_scope")
   JobExecution    JobExecution[]
 
+  // TIREA: Custom Judge Configuration Fields
+  // Agentic judge config - enables tool use during evaluation
+  agentConfig     Json?          @map("agent_config") // { tools: string[], strategy: "sequential"|"parallel", maxIterations: number }
+
+  // Multi-input comparison config - enables comparing multiple outputs
+  multiInputMode  String?        @map("multi_input_mode") // "comparison" | "ensemble" | null
+  inputMappings   Json?          @map("input_mappings") // Array<{ name: string, mapping: VariableMapping }>
+
+  // Webhook notification config - enables external notifications
+  webhookConfig   Json?          @map("webhook_config") // { enabled: boolean, url: string, events: string[] }
+
   @@index([projectId, id])
   @@map("job_configurations")
 }
