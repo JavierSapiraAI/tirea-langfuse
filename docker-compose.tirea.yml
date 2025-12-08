@@ -34,7 +34,7 @@ services:
       NEXTAUTH_URL: http://localhost:3000
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       SALT: tirea-local-salt-change-in-prod
-      ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+      ENCRYPTION_KEY: 2d1ebfe8b0d17d4a44d6dac6486a04073ff14ef91acd943687d23af3a64530e3
       TELEMETRY_ENABLED: "false"
       LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "true"
 
