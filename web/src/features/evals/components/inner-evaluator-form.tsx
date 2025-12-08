@@ -75,7 +75,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/src/components/ui/tooltip";
-import { InfoIcon, Wrench, GitCompare, Webhook } from "lucide-react";
+import { InfoIcon, Wrench, GitCompare } from "lucide-react";
 // TIREA: Custom Judge Components
 import { AgentToolsSelector } from "@/src/features/evals/components/agent-tools-selector";
 import { MultiInputConfigurator } from "@/src/features/evals/components/multi-input-configurator";

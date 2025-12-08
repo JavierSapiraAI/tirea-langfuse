@@ -197,7 +197,7 @@ export function MultiInputConfigurator({ form, disabled }: MultiInputConfigurato
                             />
                           </FormControl>
                           <FormDescription>
-                            A descriptive name for this input (e.g., "model_a_output")
+                            A descriptive name for this input (e.g., &quot;model_a_output&quot;)
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
